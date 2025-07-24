@@ -1,26 +1,29 @@
 import 'dart:convert';
-import 'package:dio/dio.dart';
 
-extension Curl on RequestOptions {
+import 'package:curl_converter/curl_converter.dart';
+import 'package:dio/dio.dart' hide Response;
+import 'package:http/http.dart' hide MultipartFile;
+
+extension CurlRequestOption on RequestOptions {
   String toCurlCmd() {
     String cmd = "curl";
 
     String header = headers
         .map((key, value) {
-      if (key == "content-type" &&
-          value.toString().contains("multipart/form-data")) {
-        value = "multipart/form-data;";
-      }
-      return MapEntry(key, "-H '$key: $value'");
-    })
+          if (key == "content-type" &&
+              value.toString().contains("multipart/form-data")) {
+            value = "multipart/form-data;";
+          }
+          return MapEntry(key, "-H '$key: $value'");
+        })
         .values
         .join(" ");
     String url = "$baseUrl$path";
     if (queryParameters.isNotEmpty) {
       String query = queryParameters
           .map((key, value) {
-        return MapEntry(key, "$key=$value");
-      })
+            return MapEntry(key, "$key=$value");
+          })
           .values
           .join("&");
 
@@ -61,5 +64,17 @@ extension Curl on RequestOptions {
     }
 
     return cmd;
+  }
+}
+
+extension CurlRequest on Request {
+  String toCurlCmd() {
+    final curl = Curl(
+      uri: url,
+      method: method,
+      headers: headers,
+      data: body,
+    );
+    return curl.toCurlString();
   }
 }

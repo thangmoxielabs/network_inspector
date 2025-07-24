@@ -7,6 +7,7 @@ import 'package:http/http.dart';
 import '../../domain/entities/http_request.dart';
 import '../../domain/entities/http_response.dart';
 import '../../network_inspector.dart';
+import '../extensions/curl_extension.dart';
 import 'byte_util.dart';
 import 'json_util.dart';
 import 'url_util.dart';
@@ -16,11 +17,8 @@ class HttpInterceptor extends BaseClient {
   final Map<String, String>? headers;
   final Client client;
   final NetworkInspector? networkInspector;
-  final Function(
-    int requestHashCode,
-    String title,
-    String message,
-  )? onHttpFinish;
+  final Function(int requestHashCode, String title, String message)?
+      onHttpFinish;
   final bool logIsAllowed;
 
   HttpInterceptor({
@@ -37,17 +35,11 @@ class HttpInterceptor extends BaseClient {
   final _byteUtil = ByteUtil();
 
   @override
-  Future<Response> head(
-    Uri url, {
-    Map<String, String>? headers,
-  }) =>
+  Future<Response> head(Uri url, {Map<String, String>? headers}) =>
       _sendUnstreamed('HEAD', url, headers);
 
   @override
-  Future<Response> get(
-    Uri url, {
-    Map<String, String>? headers,
-  }) =>
+  Future<Response> get(Uri url, {Map<String, String>? headers}) =>
       _sendUnstreamed('GET', url, headers);
 
   @override
@@ -87,27 +79,15 @@ class HttpInterceptor extends BaseClient {
       _sendUnstreamed('DELETE', url, headers, body, encoding);
 
   @override
-  Future<String> read(
-    Uri url, {
-    Map<String, String>? headers,
-  }) async {
-    final response = await get(
-      url,
-      headers: headers,
-    );
+  Future<String> read(Uri url, {Map<String, String>? headers}) async {
+    final response = await get(url, headers: headers);
     _checkResponseSuccess(url, response);
     return response.body;
   }
 
   @override
-  Future<Uint8List> readBytes(
-    Uri url, {
-    Map<String, String>? headers,
-  }) async {
-    final response = await get(
-      url,
-      headers: headers,
-    );
+  Future<Uint8List> readBytes(Uri url, {Map<String, String>? headers}) async {
+    final response = await get(url, headers: headers);
     _checkResponseSuccess(url, response);
     return response.bodyBytes;
   }
@@ -142,9 +122,7 @@ class HttpInterceptor extends BaseClient {
       }
     }
     if (logIsAllowed) saveRequest(request);
-    final response = await Response.fromStream(
-      await send(request),
-    );
+    final response = await Response.fromStream(await send(request));
 
     /// Intercept area
     if (logIsAllowed) {
@@ -200,7 +178,7 @@ class HttpInterceptor extends BaseClient {
       createdAt: DateTime.now().millisecondsSinceEpoch,
       requestSize: _byteUtil.stringToBytes(request.body.toString()),
       requestHashCode: request.hashCode,
-      cUrl: null
+      cUrl: request.toCurlCmd(),
     );
     await networkInspector!.writeHttpRequestLog(payload);
   }
@@ -214,7 +192,9 @@ class HttpInterceptor extends BaseClient {
       responseStatusMessage: response.reasonPhrase.toString(),
       responseSize: _byteUtil.stringToBytes(response.body.toString()),
       requestHashCode: requestHashCode,
-        cUrl: null
+      cUrl: response.request is Request
+          ? (response.request as Request).toCurlCmd()
+          : null,
     );
     await networkInspector!.writeHttpResponseLog(payload);
   }
