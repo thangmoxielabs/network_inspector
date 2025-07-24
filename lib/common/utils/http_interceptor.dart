@@ -104,10 +104,6 @@ class HttpInterceptor extends BaseClient {
     var processedUrl = _urlUtil.isUrlNeedToOveride(baseUrl, url);
     var request = Request(method, processedUrl);
 
-    if (logIsAllowed) {
-      saveRequest(request);
-    }
-
     if (processedHeader != null) request.headers.addAll(processedHeader);
     if (encoding != null) request.encoding = encoding;
     if (body != null) {
