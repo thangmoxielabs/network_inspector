@@ -20,6 +20,7 @@ class HttpInterceptor extends BaseClient {
   final Function(int requestHashCode, String title, String message)?
       onHttpFinish;
   final bool logIsAllowed;
+  final bool isConsoleLogAllowed;
 
   HttpInterceptor({
     this.baseUrl,
@@ -28,6 +29,7 @@ class HttpInterceptor extends BaseClient {
     required this.client,
     this.onHttpFinish,
     this.logIsAllowed = true,
+    this.isConsoleLogAllowed = false,
   });
 
   final _jsonUtil = JsonUtil();
@@ -204,8 +206,10 @@ class HttpInterceptor extends BaseClient {
     if (onHttpFinish is Function) {
       await onHttpFinish!(request.hashCode, title, message);
     }
-    await logRequest(request);
-    await logResponse(response);
+    if (isConsoleLogAllowed) {
+      await logRequest(request);
+      await logResponse(response);
+    }
   }
 
   /// Throws an error if [response] is not successful.
