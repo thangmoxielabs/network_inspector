@@ -69,12 +69,7 @@ extension CurlRequestOption on RequestOptions {
 
 extension CurlRequest on Request {
   String toCurlCmd() {
-    final curl = Curl(
-      uri: url,
-      method: method,
-      headers: headers,
-      data: body,
-    );
+    final curl = Curl(uri: url, method: method, headers: headers, data: body);
     return curl.toCurlString();
   }
 }

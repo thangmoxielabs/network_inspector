@@ -31,13 +31,14 @@ class JsonUtil {
     Map<String, String>? headers,
   ) {
     if (globalHeaders != null) {
+      final result = {...globalHeaders};
       if (headers != null) {
         for (var key in headers.keys) {
-          globalHeaders[key] = headers[key]!;
+          result[key] = headers[key]!;
         }
-        return globalHeaders;
+        return result;
       } else {
-        return globalHeaders;
+        return result;
       }
     } else {
       return headers;
